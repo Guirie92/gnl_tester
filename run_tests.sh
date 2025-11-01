@@ -10,7 +10,7 @@ CLR_RESET='\033[0m'
 
 # Default values
 VALGRIND_MODE="verbose"  # can be "verbose" or "simple"
-
+MEMCHECK_MODE="0"
 # Parse command line arguments
 for arg in "$@"; do
     case $arg in
@@ -21,6 +21,9 @@ for arg in "$@"; do
         --verbose|-v)
             VALGRIND_MODE="verbose"
             shift
+            ;;
+        --mem|--memcheck|--strict|-m)
+            MEMCHECK_MODE="1"
             ;;
     esac
 done
@@ -50,9 +53,9 @@ echo -e "${CLR_GREEN}GNL files found in parent directory${CLR_RESET}"
 echo
 
 # Build the tester
-make -s fclean
-echo -e "Building tester..."
-make
+    make -s fclean
+    echo -e "Building tester..."
+    make
 
 if [ $? -ne 0 ]; then
     echo -e "${CLR_RED}Build failed!${CLR_RESET}"
@@ -85,8 +88,15 @@ for size in $BUFFER_SIZES; do
     echo -e "$Testing with BUFFER_SIZE=$size"
     
     # Clean and recompile with the specific buffer size
-    make BUFFER_SIZE=$size fclean > /dev/null 2>&1
-    make BUFFER_SIZE=$size > /dev/null 2>&1
+    if [ "$MEMCHECK_MODE" = "1" ]; then
+        make BUFFER_SIZE=$size MEM_CHECK=1 fclean > /dev/null 2>&1
+        make BUFFER_SIZE=$size MEM_CHECK=1 > /dev/null 2>&1
+        echo -e "(Running with MEM_CHECK=1)"
+    else
+        make BUFFER_SIZE=$size fclean > /dev/null 2>&1
+        make BUFFER_SIZE=$size > /dev/null 2>&1
+        echo -e "(Running without MEM_CHECK)"
+    fi
     
     if [ $? -ne 0 ]; then
         echo -e "${CLR_RED}Compilation failed for BUFFER_SIZE=$size${CLR_RESET}"
@@ -104,10 +114,12 @@ done
 
 # Final test summary
 echo -e "=== TEST SUMMARY ==="
-if [ $total_errors -eq 0 ]; then
-    echo -e "${CLR_GREEN}✓ All tests passed!\n${CLR_RESET}"
-else
-    echo -e "${CLR_RED}✗ $total_errors test groups failed${CLR_RESET}"
+if [ "$MEMCHECK_MODE" = "0" ]; then
+    if [ $total_errors -eq 0 ]; then
+        echo -e "${CLR_GREEN}✓ All tests passed!\n${CLR_RESET}"
+    else
+        echo -e "${CLR_RED}✗ $total_errors test groups failed${CLR_RESET}"
+    fi
 fi
 echo -e "\n${CLR_CYAN}PROCEEDING WITH A MEMORY CHECK, RUNNING VALGRIND${CLR_RESET}\n"
 
@@ -119,14 +131,22 @@ if command -v valgrind >/dev/null 2>&1; then
     # Buffer sizes to test with Valgrind (remove large tests if performance hurts)
     VALGRIND_BUFFER_SIZES="1 42 100 9999 10000000"
     valgrind_errors=0
+    ERROR_COUNT_TOTAL=0
     
     for size in $VALGRIND_BUFFER_SIZES; do
         echo -e "${CLR_CYAN}Testing Valgrind with BUFFER_SIZE=$size${CLR_RESET}"
         
         # Recompile with specific buffer size
         echo -e "Compiling with BUFFER_SIZE=$size..."
-        make BUFFER_SIZE=$size fclean > /dev/null 2>&1
-        make BUFFER_SIZE=$size > /dev/null 2>&1
+        if [ "$MEMCHECK_MODE" = "1" ]; then
+            make BUFFER_SIZE=$size MEM_CHECK=1 fclean > /dev/null 2>&1
+            make BUFFER_SIZE=$size MEM_CHECK=1 > /dev/null 2>&1
+            echo -e "(Running with MEM_CHECK=1)"
+        else
+            make BUFFER_SIZE=$size fclean > /dev/null 2>&1
+            make BUFFER_SIZE=$size > /dev/null 2>&1
+            echo -e "(Running without MEM_CHECK)"
+        fi
         
         if [ $? -ne 0 ]; then
             echo -e "${CLR_RED}Compilation for Valgrind failed for BUFFER_SIZE=$size${CLR_RESET}"
@@ -144,6 +164,7 @@ if command -v valgrind >/dev/null 2>&1; then
             # Extract ERROR SUMMARY
             ERROR_SUMMARY=$(grep "ERROR SUMMARY:" "$TEMP_VALGRIND_FILE" | head -1)
             ERROR_COUNT=$(echo "$ERROR_SUMMARY" | grep -oE '[0-9]+ errors' | grep -oE '[0-9]+' || echo "0")
+            ERROR_COUNT_TOTAL=$((ERROR_COUNT_TOTAL + ERROR_COUNT))
             
             if [ -n "$ERROR_SUMMARY" ]; then
                 if [ "$ERROR_COUNT" -eq 0 ]; then
@@ -170,6 +191,10 @@ if command -v valgrind >/dev/null 2>&1; then
             rm -f "$TEMP_VALGRIND_FILE"
         else
             # Simple Valgrind
+            # Extract ERROR SUMMARY
+            ERROR_SUMMARY=$(grep "ERROR SUMMARY:" "$TEMP_VALGRIND_FILE" | head -1)
+            ERROR_COUNT=$(echo "$ERROR_SUMMARY" | grep -oE '[0-9]+ errors' | grep -oE '[0-9]+' || echo "0")
+            ERROR_COUNT_TOTAL=$((ERROR_COUNT_TOTAL + ERROR_COUNT))
             valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 ./gnl_tester > /dev/null 2>&1
             
             if [ $? -eq 0 ]; then
@@ -194,12 +219,58 @@ else
 fi
 
 echo
-if [ $total_errors -eq 0 ]; then
-    echo -e "${CLR_GREEN}================================================================"
-    echo -e "================ TESTING COMPLETED SUCCESSFULLY ================"
-    echo -e "================================================================${CLR_RESET}"
+if [ "$MEMCHECK_MODE" = "0" ]; then
+    if [ $total_errors -eq 0 ]; then
+        echo -e "${CLR_GREEN}================================================================"
+        echo -e "================ TESTING COMPLETED SUCCESSFULLY ================"
+        echo -e "================================================================${CLR_RESET}"
+    else
+        BANNER_WIDTH=64
+        TEXT_PREFIX=" TESTING COMPLETED WITH "
+        TEXT_SUFFIX=" ERRORS "
+
+        TOTAL_CONTENT="${TEXT_PREFIX}${total_errors}${TEXT_SUFFIX}"
+        CONTENT_LENGTH=${#TOTAL_CONTENT}
+
+        # Calculate the total length of the text including the variable
+        TOTAL_TEXT_LENGTH=$((STATIC_LENGTH + ${#total_errors}))
+        TOTAL_PADDING=$((BANNER_WIDTH - CONTENT_LENGTH - 2))
+
+        LEFT_PAD_LENGTH=$((TOTAL_PADDING / 2))
+        RIGHT_PAD_LENGTH=$((TOTAL_PADDING - LEFT_PAD_LENGTH))
+
+        LEFT_PADDING_STR=$(printf "=%.0s" $(seq 1 $LEFT_PAD_LENGTH))
+        RIGHT_PADDING_STR=$(printf "=%.0s" $(seq 1 $RIGHT_PAD_LENGTH))
+        
+        echo -e "${CLR_RED}================================================================"
+        printf "=%s%s%s=%s\n" "$LEFT_PADDING_STR" "$TOTAL_CONTENT" "$RIGHT_PADDING_STR"
+        echo -e "================================================================${CLR_RESET}"
+    fi
 else
-    echo -e "${CLR_RED}================================================================"
-    echo -e "      ====== TESTING COMPLETED WITH $total_errors ERRORS ======"
-    echo -e "================================================================${CLR_RESET}"
+    if [ $ERROR_COUNT_TOTAL -eq 0 ]; then
+        echo -e "${CLR_GREEN}================================================================"
+        echo -e "================ TESTING COMPLETED SUCCESSFULLY ================"
+        echo -e "================================================================${CLR_RESET}"
+    else
+        BANNER_WIDTH=64
+        TEXT_PREFIX=" TESTING COMPLETED WITH "
+        TEXT_SUFFIX=" ERRORS "
+
+        TOTAL_CONTENT="${TEXT_PREFIX}${ERROR_COUNT_TOTAL}${TEXT_SUFFIX}"
+        CONTENT_LENGTH=${#TOTAL_CONTENT}
+
+        # Calculate the total length of the text including the variable
+        TOTAL_TEXT_LENGTH=$((STATIC_LENGTH + ${#ERROR_COUNT_TOTAL}))
+        TOTAL_PADDING=$((BANNER_WIDTH - CONTENT_LENGTH - 2))
+
+        LEFT_PAD_LENGTH=$((TOTAL_PADDING / 2))
+        RIGHT_PAD_LENGTH=$((TOTAL_PADDING - LEFT_PAD_LENGTH))
+
+        LEFT_PADDING_STR=$(printf "=%.0s" $(seq 1 $LEFT_PAD_LENGTH))
+        RIGHT_PADDING_STR=$(printf "=%.0s" $(seq 1 $RIGHT_PAD_LENGTH))
+
+        echo -e "${CLR_RED}================================================================"
+        printf "=%s%s%s=%s\n" "$LEFT_PADDING_STR" "$TOTAL_CONTENT" "$RIGHT_PADDING_STR"
+        echo -e "================================================================${CLR_RESET}"
+    fi
 fi

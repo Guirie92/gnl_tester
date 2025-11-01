@@ -6,7 +6,7 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 14:46:31 by guillsan          #+#    #+#             */
-/*   Updated: 2025/10/27 22:22:39 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:42:08 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,10 @@
 
 /* Include GNL header from parent directory */
 # include "../../get_next_line.h"
+
+# ifndef MEM_CHECK
+#  define MEM_CHECK 0
+# endif
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 42
@@ -43,36 +47,37 @@ extern int g_verbose;
 /* Test failure structure */
 typedef enum e_ret_code
 {
-    EXTRA_DATA = -2,
-    INCOMPLETE_READ = -1
+	EXTRA_DATA = -2,
+	INCOMPLETE_READ = -1
 }	t_ret_code;
 
 /* Test failure structure */
 typedef struct s_test_failure
 {
-    int line_number;
-    char *expected;
-    char *actual;
-    struct s_test_failure *next;
+	int						line_number;
+	char					*expected;
+	char					*actual;
+	struct s_test_failure	*next;
 }	t_test_failure;
 
 /* Test result structure */
 typedef struct s_test_result
 {
-    int passed;
-    int total_lines;
-    t_test_failure *failures;
+	int				passed;
+	int				total_lines;
+	t_test_failure	*failures;
 }	t_test_result;
 
 /* Test utilities */
-void	        print_result(const char *test_name, int result);
-char	        *read_whole_file(const char *filename);
-void	        create_test_file(const char *filename, const char *content);
+int				get_random_number(int min, int max);
+void			print_result(const char *test_name, int result);
+char			*read_whole_file(const char *filename);
+void			create_test_file(const char *filename, const char *content);
 int				test_invalid_fd(void);
-void	        set_verbose_mode(int verbose);
+void			set_verbose_mode(int verbose);
 void			print_test_summary(const char *test_name, t_test_result *result);
-void	        free_test_result(t_test_result *result);
-void			flush_sleep();
-t_test_result	*test_single_file(const char *filename);
+void			free_test_result(t_test_result *result);
+void			flush_sleep(void);
+t_test_result	*test_single_file(const char *filename, int testidx);
 
 #endif /* TEST_UTILS_H */

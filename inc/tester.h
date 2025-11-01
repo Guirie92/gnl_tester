@@ -6,7 +6,7 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 14:47:19 by guillsan          #+#    #+#             */
-/*   Updated: 2025/10/27 22:20:56 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:39:32 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,14 @@
 # define TESTER_H
 
 # include "test_utils.h"
+# include <time.h>
+# include <stdlib.h>
 
 typedef struct s_test_case
 {
 	const char		*name;
 	const char		*filename;
-	t_test_result	*(*test_func)(const char *);
+	t_test_result	*(*test_func)(const char *, int);
 }	t_test_case;
 
 void		run_test_suite(const char *suite_name, t_test_case *tests, 

@@ -52,20 +52,28 @@ To run with a mem-check/valgrind output, use -m (or --mem/--memcheck/--strict):
 ./run_tests.sh -m
 
 ```
-**Do not worry if you see many tests failing (and a lot of red on the screen).
-The important output from the mem check is the final Valgrind assessment
-(whether or not it detected errors, and the error trace)**
+**Do not worry if you don't see green OK marks on each test.
+The important output from the mem check is the error trace and the
+final Valgrind assessment.**
 
 For instance:
 ```
 === Valgrind Summary ===
 ✓ All Valgrind tests passed - No memory issues detected
+
+================================================================
+================ TESTING COMPLETED SUCCESSFULLY ================
+================================================================
 ```
 or
 
 ```
 === Valgrind Summary ===
 ✗ Valgrind detected issues in 5 buffer size(s)
+
+================================================================
+=============== TESTING COMPLETED WITH 10 ERRORS ===============
+================================================================
 ```
 
 
@@ -129,7 +137,7 @@ Run with --verbose for detailed information
 
 
 ================================================================
-      ====== TESTING COMPLETED WITH 695 ERRORS ======
+============== TESTING COMPLETED WITH 695 ERRORS ===============
 ================================================================
 
 ```

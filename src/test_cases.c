@@ -6,15 +6,15 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 14:48:21 by guillsan          #+#    #+#             */
-/*   Updated: 2025/10/27 22:23:02 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:48:42 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/tester.h"
 
-t_test_result	*test_file_wrapper(const char *filename)
+t_test_result	*test_file_wrapper(const char *filename, int testidx)
 {
-	return (test_single_file(filename));
+	return (test_single_file(filename, testidx));
 }
 
 t_test_case mandatory_tests[] = {
@@ -40,7 +40,7 @@ int	get_mandatory_test_count(void)
 	return (sizeof(mandatory_tests) / sizeof(mandatory_tests[0]));
 }
 
-t_test_case *get_mandatory_tests(void)
+t_test_case	*get_mandatory_tests(void)
 {
 	return (mandatory_tests);
 }

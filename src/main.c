@@ -6,7 +6,7 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 14:49:07 by guillsan          #+#    #+#             */
-/*   Updated: 2025/10/27 23:07:26 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:39:05 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,7 @@ int	run_tests_for_current_buffer_size(int *error_count)
 	t_test_case	*tests;
 	int			test_count;
 
+	srand(time(NULL));
 	printf(CLR_MGT "[BUFFER_SIZE = %d]" CLR_RESET "\n", BUFFER_SIZE);
 
 	/* Test invalid FDs */
@@ -85,10 +86,12 @@ int	main(int argc, char **argv)
 	/* Run tests for the CURRENT buffer size only */
 	run_tests_for_current_buffer_size(&total_errors);
 
+#if MEM_CHECK
+#else
 	if (total_errors == 0)
 		printf(CLR_GREEN "=== ALL TESTS PASSED ===\n" CLR_RESET "\n");
 	else
 		printf(CLR_RED "=== TESTS COMPLETED WITH %d ERRORS ===" CLR_RESET "\n", total_errors);
-
+#endif
 	return (total_errors);
 }
