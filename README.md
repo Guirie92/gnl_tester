@@ -8,7 +8,7 @@ It compiles your files and runs them.
 ## Project Structure
 
 ```
-GNL/ # -------------------------------- target repo
+GNL/ # ---------------------------------- target repo
 ├─ get_next_line.h
 ├─ *.c
 └─ tester/ # ---------------------------- this tester
@@ -17,8 +17,9 @@ GNL/ # -------------------------------- target repo
 	├─ src # ---------------------------- .c files
 	|	├─ main.c
 	|	├─ tester.c
+	|	├─ malloc_mock.c
 	|	└─ ...
-	└─ inc # ----------------------------- header files
+	└─ inc # ---------------------------- header files
 	 	├─ tester.h
 	 	└─ ...
 ```
@@ -31,8 +32,8 @@ From inside the target **get_next_line** repository:
 ```bash
 
 cd get_next_line
-git clone https://github.com/Guirie92/gnl_tester.git tester # or name it as you wish
-cd tester
+git clone https://github.com/Guirie92/gnl_tester.git # or name it as you wish
+cd gnl_tester
 ./run_tests.sh
 
 ```
@@ -43,6 +44,29 @@ This will:
 
 
 ## Run Specific Tests
+
+
+To run with a mem-check/valgrind output, use -m (or --mem/--memcheck/--strict):
+```bash
+
+./run_tests.sh -m
+
+```
+**Do not worry if you see many tests failing (and a lot of red on the screen).
+The important output from the mem check is the final Valgrind assessment
+(whether or not it detected errors, and the error trace)**
+
+For instance:
+```
+=== Valgrind Summary ===
+✓ All Valgrind tests passed - No memory issues detected
+```
+or
+
+```
+=== Valgrind Summary ===
+✗ Valgrind detected issues in 5 buffer size(s)
+```
 
 
 To run the bonus, you can use -b:
