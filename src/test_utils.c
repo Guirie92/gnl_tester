@@ -6,7 +6,7 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 14:46:54 by guillsan          #+#    #+#             */
-/*   Updated: 2025/11/01 17:48:10 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 18:03:32 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -339,7 +339,7 @@ void print_test_summary(const char *test_name, t_test_result *result)
 
 }
 
-void	ree_test_result(t_test_result *result)
+void	free_test_result(t_test_result *result)
 {
 	t_test_failure *failure = result->failures;
 
