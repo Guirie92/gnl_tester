@@ -6,7 +6,7 @@
 /*   By: guillsan <guillsan@student.42madrid.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/11/01 16:27:43 by guillsan          #+#    #+#             */
-/*   Updated: 2025/11/01 17:50:01 by guillsan         ###   ########.fr       */
+/*   Updated: 2025/11/01 17:52:36 by guillsan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,5 +47,5 @@ void	*fail_malloc(size_t size)
 	init_real_malloc();
 	if (fail_at > 0 && malloc_count == fail_at)
 		return (NULL);
-	return (real_malloc(size);
+	return (real_malloc(size));
 }
